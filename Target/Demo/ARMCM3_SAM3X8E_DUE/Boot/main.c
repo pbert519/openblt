@@ -76,6 +76,9 @@ static void Init(void)
    * the microcontroller's system clock and configuring the GPIO for the communication
    * peripheral(s) enabled in the bootloader's configuration header file "blt_conf.h".
    */
+
+  WDT->WDT_MR = 1 << 15;
+
   SystemInit();
 
 #if (BOOT_COM_CAN_ENABLE > 0)
