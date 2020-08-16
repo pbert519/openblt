@@ -78,7 +78,7 @@
  *
  */
 /** \brief Enable/disable UART transport layer. */
-#define BOOT_COM_RS232_ENABLE            (1)
+#define BOOT_COM_RS232_ENABLE            (0)
 /** \brief Configure the desired communication speed. */
 #define BOOT_COM_RS232_BAUDRATE          (57600)
 /** \brief Configure number of bytes in the target->host data packet. */
@@ -147,7 +147,7 @@
 /* DONE ##Boot Configure the size of the flash memory device on the microcontroller.
  * Specify the value in KB. 
  */
-#define BOOT_NVM_SIZE_KB                (256)
+#define BOOT_NVM_SIZE_KB                (512)
 /** \brief Enable/disable hooks functions to override the user program checksum handling. */
 #define BOOT_NVM_CHECKSUM_HOOKS_ENABLE  (0)
 

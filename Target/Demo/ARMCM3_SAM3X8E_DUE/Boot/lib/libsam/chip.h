@@ -25,6 +25,7 @@
 #include "sam.h"
 
 #include "types.h"
+#define assert ASSERT_RT
 
 /* Define attribute */
 #if defined (  __GNUC__  ) /* GCC CS3 */
