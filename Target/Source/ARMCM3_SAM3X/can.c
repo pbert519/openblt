@@ -212,7 +212,7 @@ void CanInit(void)
   ASSERT_RT(BOOT_COM_CAN_TX_MSG_ID < 0x80000000);
 
   can_init(CAN_INTERFACE, SystemCoreClock, BOOT_COM_CAN_BAUDRATE/1000);
-
+  can_disable_interrupt(CAN_INTERFACE, CAN_DISABLE_ALL_INTERRUPT_MASK);
   can_reset_all_mailbox(CAN_INTERFACE);
 
   rx_mailbox.ul_mb_idx = 0;
@@ -254,7 +254,7 @@ void CanTransmitPacket(blt_int8u *data, blt_int8u len)
   tx_mailbox.ul_id = CAN_MID_MIDvA(BOOT_COM_CAN_TX_MSG_ID);
   // Buffer overflow, but who cares
   tx_mailbox.ul_datal = *((blt_int32u*)data);
-  tx_mailbox.ul_datah = *((blt_int32u*)data+4);;
+  tx_mailbox.ul_datah = *((blt_int32u*)(data+4));
   tx_mailbox.uc_length = len;
   can_mailbox_write(CAN_INTERFACE, &tx_mailbox);
 
@@ -305,7 +305,7 @@ blt_bool CanReceivePacket(blt_int8u *data, blt_int8u *len)
     can_mailbox_read(CAN_INTERFACE, &rx_mailbox);
     *len = rx_mailbox.uc_length;
     *((blt_int32u*)data) = rx_mailbox.ul_datal;
-    *((blt_int32u*)data+4) = rx_mailbox.ul_datal;
+    *((blt_int32u*)(data+4)) = rx_mailbox.ul_datah;
     result = BLT_TRUE;
   } 
 

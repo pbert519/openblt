@@ -645,9 +645,8 @@ uint32_t can_mailbox_read(Can *p_can, can_mb_conf_t *p_mailbox)
 
 	/* Read received data. */
 	p_mailbox->ul_datal = p_can->CAN_MB[uc_index].CAN_MDL;
-	if (p_mailbox->uc_length > 4) {
-		p_mailbox->ul_datah = p_can->CAN_MB[uc_index].CAN_MDH;
-	}
+	p_mailbox->ul_datah = p_can->CAN_MB[uc_index].CAN_MDH;
+	
 
 	/* Read the mailbox status again to check whether the software needs to re-read mailbox data register. */
 	p_mailbox->ul_status = p_can->CAN_MB[uc_index].CAN_MSR;
