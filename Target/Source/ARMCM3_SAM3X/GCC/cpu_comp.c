@@ -46,10 +46,11 @@
 ****************************************************************************************/
 void CpuIrqDisable(void)
 {
-  /* TODO ##Port Disable the global interrupts. For safety and stability reasons, the
+  /* DONE ##Port Disable the global interrupts. For safety and stability reasons, the
    * bootloader does not use interrupts. This function is called to disable the
    * generation of interrupt. It is called upon bootloader initialization by CpuInit().
    */
+  __asm volatile ("cpsid i");
 } /*** end of CpuIrqDisable ***/
 
 
@@ -60,11 +61,12 @@ void CpuIrqDisable(void)
 ****************************************************************************************/
 void CpuIrqEnable(void)
 {
-  /* TODO ##Port Enable the global interrupts. Not all, but some microcontrollers have
+  /* DONE ##Port Enable the global interrupts. Not all, but some microcontrollers have
    * global interrupts enabled right after reset. In this case the bootloader should
    * enable the global interrupts again, right before the user program is started in
    * function CpuStartUserProgram(). 
    */
+  __asm volatile ("cpsie i");
 } /*** end of CpuIrqEnable ***/
 
 

@@ -36,7 +36,7 @@
 * Include files
 ****************************************************************************************/
 #include "boot.h"                                /* bootloader generic header          */
-
+#include "chip.h"
 
 /****************************************************************************************
 * Macro definitions
@@ -115,7 +115,7 @@ void CpuStartUserProgram(void)
   /* reset the timer */
   TimerReset();
   
-  /* TODO ##Port Prepare to start the user program. This typically consists of remapping
+  /* DONE ##Port Prepare to start the user program. This typically consists of remapping
    * the base address of the vector table, since the user program is typically moved
    * forward to make space for the bootloader itself. 
    * Some microcontrollers to not support changing the base address of the vector 
@@ -128,13 +128,17 @@ void CpuStartUserProgram(void)
    * in RAM. This was done in the STM32F0 port.
    */
 
-  /* TODO ##Port Enable the global interrupts by calling function CpuIrqEnable(). Note
+  cpu_irq_disable();
+
+  SCB->VTOR = NvmGetUserProgBaseAddress();
+
+  /* DONE ##Port Enable the global interrupts by calling function CpuIrqEnable(). Note
    * that this should only be done if the microcontroller normally has global interrupts
    * enabled after a reset event. Otherwise, you can skip this part.
    */
   CpuIrqEnable();
 
-  /* TODO ##Port Start the user program. This is achieved by reading out the address
+  /* DONE ##Port Start the user program. This is achieved by reading out the address
    * of the user program's reset handler from its vector table and jumping to it.
    * The following example implementation shows how this is done in case the reset
    * handler is located in the first entry of the interrupt vector table and the
@@ -150,7 +154,9 @@ void CpuStartUserProgram(void)
    * the 1st entry in the user program's vector table. this address points to the
    * user program's reset handler.
    */
-  pProgResetHandler = (void(*)(void))(*((blt_addr *)NvmGetUserProgBaseAddress()));
+  uint32_t start_pt = *((uint32_t*) (NvmGetUserProgBaseAddress()+4));
+  pProgResetHandler = (void(*)(void)) start_pt;
+  //pProgResetHandler = (void(*)(void))(*((blt_addr *)NvmGetUserProgBaseAddress()));
   /* start the user program by calling its reset interrupt service routine */
   pProgResetHandler();
 #if (BOOT_COM_DEFERRED_INIT_ENABLE > 0) && (BOOT_COM_ENABLE > 0)
@@ -176,7 +182,7 @@ void CpuMemCopy(blt_addr dest, blt_addr src, blt_int16u len)
 {
   blt_int8u *from, *to;
 
-  /* TODO ##Port Implements similar functionality as the C library's memcpy() function.
+  /* DONE ##Port Implements similar functionality as the C library's memcpy() function.
    * For most ports you can simply leave this function as is. If desired you can optimize
    * the implementation, for example by copying 32-bits at a time for 32-bit CPU
    * architectures. Alternativly, you could just use memcpy().
@@ -209,7 +215,7 @@ void CpuMemSet(blt_addr dest, blt_int8u value, blt_int16u len)
 {
   blt_int8u *to;
 
-  /* TODO ##Port Implements similar functionality as the C library's memset() function.
+  /* DONE ##Port Implements similar functionality as the C library's memset() function.
    * For most ports you can simply leave this function as is. If desired you can optimize
    * the implementation, for example by setting 32-bits at a time for 32-bit CPU
    * architectures. Alternativly, you could just use memset().

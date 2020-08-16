@@ -54,7 +54,7 @@
 * Include files
 ****************************************************************************************/
 #include "boot.h"                                /* bootloader generic header          */
-
+#include "flash_efc.h"
 
 /****************************************************************************************
 * Macro definitions
@@ -64,7 +64,7 @@
 /** \brief Value for an invalid flash address. */
 #define FLASH_INVALID_ADDRESS           (0xffffffff)
 /** \brief Standard size of a flash block for writing. */
-/* TODO ##Port The FLASH_WRITE_BLOCK_SIZE should be at least 512. If for some reason this
+/* DONE ##Port The FLASH_WRITE_BLOCK_SIZE should be at least 512. If for some reason this
  * is not large enough, double the size so: 512 -> 1024 -> 2048 -> 4096 etc.
  */
 #define FLASH_WRITE_BLOCK_SIZE          (512)
@@ -81,7 +81,7 @@
  *         verification will always fail.
  */
 #ifndef BOOT_FLASH_VECTOR_TABLE_CS_OFFSET
-/* TODO ##Port The bootloader uses a 32-bit checksum signature value to determine if a 
+/* DONE ##Port The bootloader uses a 32-bit checksum signature value to determine if a 
  * a valid user program is present or not. This checksum value is written by the
  * bootloader at the end of a firmware update with function FlashWriteChecksum(). Right
  * before a user program is about to be started, function FlashVerifyChecksum() is called
@@ -93,7 +93,7 @@
  * vector table. This macro should be set to the size of the vector table, which can then
  * be used to determine the memory address of the signature checksum.
  */
-#define BOOT_FLASH_VECTOR_TABLE_CS_OFFSET    (0x188)
+#define BOOT_FLASH_VECTOR_TABLE_CS_OFFSET    (0xF4)
 #endif
 
 
@@ -174,7 +174,7 @@ static blt_int8u FlashGetSectorIdx(blt_addr address);
  */
 static const tFlashSector flashLayout[] =
 {
-  /* TODO ##Port Update the contents of this array with the erase sector sizes as defined
+  /* DONE ##Port Update the contents of this array with the erase sector sizes as defined
    * in the microcontroller's reference manual. The flash sector erase sizes are
    * hardware specific and must therefore match, otherwise erase operations cannot be
    * performed properly. 
@@ -184,28 +184,30 @@ static const tFlashSector flashLayout[] =
    * in chunks of 16 KB and the first 32 KB are reserved for the bootloader. Its flash
    * memory starts at 0x08000000 in the memory map.
    */
-  /* { 0x08000000, 0x04000,  0},           flash sector  0 - reserved for bootloader   */
-  /* { 0x08004000, 0x04000,  1},           flash sector  1 - reserved for bootloader   */
-  { 0x08008000, 0x04000,  2},           /* flash sector  2 - 16kb                      */
-  { 0x0800C000, 0x04000,  3},           /* flash sector  3 - 16kb                      */
+/*{ 0x08000000, 0x08000, 0 },         flash sector 0 - reserved for bootloader      */
+  { 0x08008000, 0x08000, 1},            /* flash sector  1 - 32kb                      */
 #if (BOOT_NVM_SIZE_KB > 64)
-  { 0x08010000, 0x4000,  4},            /* flash sector  4 - 16kb                      */
-  { 0x08014000, 0x4000,  5},            /* flash sector  5 - 16kb                      */
-  { 0x08018000, 0x4000,  6},            /* flash sector  6 - 16kb                      */
-  { 0x0801C000, 0x4000,  7},            /* flash sector  7 - 16kb                      */
+  { 0x08010000, 0x08000, 2},            /* flash sector  2 - 32kb                      */
+  { 0x08018000, 0x08000, 3},            /* flash sector  3 - 32kb                      */
 #endif
 #if (BOOT_NVM_SIZE_KB > 128)
-  { 0x08020000, 0x4000,  8},            /* flash sector  8 - 16kb                      */
-  { 0x08024000, 0x4000,  9},            /* flash sector  9 - 16kb                      */
-  { 0x08028000, 0x4000, 10},            /* flash sector 10 - 16kb                      */
-  { 0x0802C000, 0x4000, 11},            /* flash sector 11 - 16kb                      */
-  { 0x08030000, 0x4000, 12},            /* flash sector 12 - 16kb                      */
-  { 0x08034000, 0x4000, 13},            /* flash sector 13 - 16kb                      */
-  { 0x08038000, 0x4000, 14},            /* flash sector 14 - 16kb                      */
-  { 0x0803C000, 0x4000, 15},            /* flash sector 15 - 16kb                      */
+  { 0x08020000, 0x08000, 4},            /* flash sector  4 - 32kb                      */
+  { 0x08028000, 0x08000, 5},            /* flash sector  5 - 32kb                      */
+  { 0x08030000, 0x08000, 6},            /* flash sector  6 - 32kb                      */
+  { 0x08038000, 0x08000, 7},            /* flash sector  7 - 32kb                      */
 #endif
 #if (BOOT_NVM_SIZE_KB > 256)
-#error "BOOT_NVM_SIZE_KB > 256 is currently not supported."
+  { 0x08040000, 0x08000, 8},            /* flash sector  8 - 32kb                      */
+  { 0x08048000, 0x08000, 9},            /* flash sector  9 - 32kb                      */
+  { 0x08050000, 0x08000, 10},            /* flash sector  10 - 32kb                      */
+  { 0x08058000, 0x08000, 11},            /* flash sector  11 - 32kb                      */
+  { 0x08060000, 0x08000, 12},            /* flash sector  12 - 32kb                      */
+  { 0x08068000, 0x08000, 13},            /* flash sector  13 - 32kb                      */
+  { 0x08070000, 0x08000, 14},            /* flash sector  14 - 32kb                      */
+  { 0x08078000, 0x08000, 15},            /* flash sector  15 - 32kb                      */
+#endif
+#if (BOOT_NVM_SIZE_KB > 512)
+#error "BOOT_NVM_SIZE_KB > 512 is currently not supported."
 #endif
 };
 #else
@@ -389,7 +391,7 @@ blt_bool FlashWriteChecksum(void)
   blt_bool   result = BLT_TRUE;
   blt_int32u signature_checksum = 0;
 
-  /* TODO ##Port Calculate and write the signature checksum such that it appears at the
+  /* DONE ##Port Calculate and write the signature checksum such that it appears at the
    * address configured with macro BOOT_FLASH_VECTOR_TABLE_CS_OFFSET. Use the 
    * FlashWrite() function for the actual write operation. For a typical microcontroller,
    * the bootBlock holds the program code that includes the user program's interrupt
@@ -459,7 +461,7 @@ blt_bool FlashVerifyChecksum(void)
   blt_bool   result = BLT_TRUE;
   blt_int32u signature_checksum = 0;
 
-  /* TODO ##Port Implement code here that basically does the reverse of
+  /* DONE ##Port Implement code here that basically does the reverse of
    * FlashWriteChecksum(). Just make sure to read the values directory from flash memory
    * and NOT from the bootBlock. 
    * The example implementation reads the first 7 32-bit from the user program flash
@@ -777,37 +779,39 @@ static blt_bool FlashWriteBlock(tFlashBlockInfo *block)
   /* only continue if all is okay so far */
   if (result == BLT_TRUE)
   {
-    /* TODO ##Port Program the data contents in 'block' to flash memory here and read the
+    /* DONE ##Port Program the data contents in 'block' to flash memory here and read the
      * programmed data values back directory from flash memory to verify that the flash
      * program operation was successful. The example implementation assumes that flash
      * data can be written 32-bits at a time.
      */
 
-    /* program all words in the block one by one */
-    for (word_cnt=0; word_cnt<(FLASH_WRITE_BLOCK_SIZE/sizeof(blt_int32u)); word_cnt++)
-    {
-      prog_addr = block->base_addr + (word_cnt * sizeof(blt_int32u));
-      prog_data = *(volatile blt_int32u *)(&block->data[word_cnt * sizeof(blt_int32u)]);
-      /* keep the watchdog happy */
-      CopService();
-      /* TODO ##Port Program 32-bit 'prog_data' data value to memory address 'prog_addr'.
-       * In case an error occured, set result to BLT_FALSE and break the loop. 
-       */
-      if (1 == 0)
-      {
-        result = BLT_FALSE;
-        break;
-      }
-      /* verify that the written data is actually there */
-      if (*(volatile blt_int32u *)prog_addr != prog_data)
-      {
-        /* TODO ##Port Uncomment the following two lines again. It was commented out so
-         * that a dry run with the flash driver is possible without it reporting errors.
-         */
-        /*result = BLT_FALSE;*/
-        /*break;*/
-      }
+    CopService();
+    if (FLASH_RC_OK != flash_write(block->base_addr, block->data, FLASH_WRITE_BLOCK_SIZE, 1)) {
+      result = BLT_FALSE;
     }
+
+    if (result == BLT_TRUE) {
+
+      for (word_cnt=0; word_cnt<(FLASH_WRITE_BLOCK_SIZE/sizeof(blt_int32u)); word_cnt++)
+      {
+        prog_addr = block->base_addr + (word_cnt * sizeof(blt_int32u));
+        prog_data = *(volatile blt_int32u *)(&block->data[word_cnt * sizeof(blt_int32u)]);
+        /* keep the watchdog happy */
+        CopService();
+
+        /* verify that the written data is actually there */
+        if (*(volatile blt_int32u *)prog_addr != prog_data)
+        {
+          /* DONE ##Port Uncomment the following two lines again. It was commented out so
+          * that a dry run with the flash driver is possible without it reporting errors.
+          */
+          result = BLT_FALSE;
+          break;
+        }
+      }
+
+    }
+    
   }
 
   /* Give the result back to the caller. */
@@ -826,7 +830,7 @@ static blt_bool FlashWriteBlock(tFlashBlockInfo *block)
 static blt_bool FlashEraseSectors(blt_int8u first_sector_idx, blt_int8u last_sector_idx)
 {
   blt_bool   result = BLT_TRUE;
-  blt_int8u  sectorIdx;
+  //blt_int8u  sectorIdx;
   blt_addr   sectorBaseAddr;
   blt_int32u sectorSize;
 
@@ -848,34 +852,42 @@ static blt_bool FlashEraseSectors(blt_int8u first_sector_idx, blt_int8u last_sec
   /* only continue if all is okay so far */
   if (result == BLT_TRUE)
   {
-    /* erase the sectors one by one */
-    for (sectorIdx = first_sector_idx; sectorIdx <= last_sector_idx; sectorIdx++)
-    {
-      /* service the watchdog */
-      CopService();
-      /* get information about the sector */
-      sectorBaseAddr = flashLayout[sectorIdx].sector_start;
-      sectorSize = flashLayout[sectorIdx].sector_size;
-      /* validate the sector information */
-      if ( (sectorBaseAddr == FLASH_INVALID_ADDRESS) || (sectorSize == 0) )
-      {
-        /* invalid sector information. flag error and abort erase operation */
-        result = BLT_FALSE;
-        break;
-      }
+    // /* erase the sectors one by one */
+    // for (sectorIdx = first_sector_idx; sectorIdx <= last_sector_idx; sectorIdx++)
+    // {
+    //   /* service the watchdog */
+    //   CopService();
+    //   /* get information about the sector */
+    //   sectorBaseAddr = flashLayout[sectorIdx].sector_start;
+    //   sectorSize = flashLayout[sectorIdx].sector_size;
+    //   /* validate the sector information */
+    //   if ( (sectorBaseAddr == FLASH_INVALID_ADDRESS) || (sectorSize == 0) )
+    //   {
+    //     /* invalid sector information. flag error and abort erase operation */
+    //     result = BLT_FALSE;
+    //     break;
+    //   }
       
-      /* TODO ##Port Perform the flash erase operation of a sector that starts at
-       * 'sectorBaseAddr' and has a length of 'sectorSize' bytes. In case an error
-       * occured, set result to BLT_FALSE and break the loop.
-       */
-      if(1 == 0)
-      {
-        /* could not perform erase operation */
-        result = BLT_FALSE;
-        /* error detected so don't bother continuing with the loop */
-        break;
-      }
-    }
+    //   /* DONE ##Port Perform the flash erase operation of a sector that starts at
+    //    * 'sectorBaseAddr' and has a length of 'sectorSize' bytes. In case an error
+    //    * occured, set result to BLT_FALSE and break the loop.
+    //    */
+    //   if(1 == 0)
+    //   {
+    //     /* could not perform erase operation */
+    //     result = BLT_FALSE;
+    //     /* error detected so don't bother continuing with the loop */
+    //     break;
+    //   }
+    // }
+
+    // Delete only the fist flash page to invalidate the checksum, the flash erase is done page wise while flashing
+    sectorBaseAddr = flashLayout[first_sector_idx].sector_start;
+    sectorSize = IFLASH0_PAGE_SIZE;
+    uint8_t tmpData[sectorSize];
+    CpuMemSet((blt_int32u)tmpData, 0xFF, sectorSize);
+
+    flash_write(sectorBaseAddr, tmpData, sectorSize, 1);
   }
 
   /* give the result back to the caller */

@@ -40,7 +40,7 @@
 * Include files
 ****************************************************************************************/
 #include "boot.h"                                /* bootloader generic header          */
-
+#include "chip.h"
 
 /****************************************************************************************
 * Local data declarations
@@ -61,10 +61,22 @@ void TimerInit(void)
   /* Reset the timer configuration. */
   TimerReset();
 
-  /* TODO ##Port Configure a timer peripheral such that 1 millisecond events can be
+  /* DONE ##Port Configure a timer peripheral such that 1 millisecond events can be
    * detected. Note that the bootloader does not use interrupts, so this driver should
    * also not generate timer related interrupts. 
    */
+    // Start Clock
+  REG_PMC_PCR = (ID_TC0 & 0x7F) | PMC_PCR_EN | PMC_PCR_CMD;
+  // Unlock
+  //REG_TC0_WPMR = TC_WPMR_WPKEY(0x54494D);
+  // 42Mhz, restart on compare event
+  REG_TC0_CMR0 = TC_CMR_TCCLKS_TIMER_CLOCK1 | TC_CMR_WAVSEL_UP_RC;
+  // 1ms cycle time
+  REG_TC0_RC0 = 0x0000A410;
+  // Lock
+  //REG_TC0_WPMR = TC_WPMR_WPKEY(0x54494D) | TC_WPMR_WPEN;
+  // Enable
+  REG_TC0_CCR0 = TC_CCR_CLKEN | TC_CCR_SWTRG;
 
   /* Reset the millisecond counter value. */
   millisecond_counter = 0;
@@ -79,7 +91,12 @@ void TimerInit(void)
 ****************************************************************************************/
 void TimerReset(void)
 {
-  /* TODO ##Port Set the timer peripheral back into the default reset value. */
+  /* DONE ##Port Set the timer peripheral back into the default reset value. */
+  REG_TC0_WPMR = TC_WPMR_WPKEY(0x54494D);
+  REG_TC0_CMR0 = 0;
+  REG_TC0_RC0 = 0;
+  REG_TC0_CCR0 = 0;
+  REG_PMC_PCR = (ID_TC0 & 0x7F) | PMC_PCR_CMD; 
 } /* end of TimerReset */
 
 
@@ -90,7 +107,7 @@ void TimerReset(void)
 ****************************************************************************************/
 void TimerUpdate(void)
 {
-  /* TODO ##Port Check with the timer peripheral if the 1 millisecond event occured. This
+  /* DONE ##Port Check with the timer peripheral if the 1 millisecond event occured. This
    * is typically done by looking at a flag bit this is set by the timer peripheral. An
    * alternative solution would use the timer peripheral's free running counter. Just
    * keep in mind that with the latter case, you would have to store the free running
@@ -98,7 +115,7 @@ void TimerUpdate(void)
    * it with the current value of the free running counter to determine if a millisecond
    * passed.
    */
-  if (1 == 0)
+  if (0 != (REG_TC0_SR0 & TC_SR_CPCS))
   {
     /* Increment the millisecond counter. */
     millisecond_counter++;

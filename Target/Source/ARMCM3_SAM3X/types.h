@@ -49,7 +49,7 @@
 /****************************************************************************************
 * Type definitions
 ****************************************************************************************/
-/* TODO ##Port Adjust the type definitions such that they match the microcontroller
+/* DONE ##Port Adjust the type definitions such that they match the microcontroller
  * architecture for which this port is being developed. These type definitions are quite
  * generic and can typically be left as is.
  */

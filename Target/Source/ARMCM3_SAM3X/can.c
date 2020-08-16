@@ -40,8 +40,8 @@
 ****************************************************************************************/
 #include "boot.h"                                /* bootloader generic header          */
 #if (BOOT_COM_CAN_ENABLE > 0)
-/* TODO ##Port Include microcontroller peripheral driver header files here. */
-
+/* DONE ##Port Include microcontroller peripheral driver header files here. */
+#include "chip.h"
 
 /****************************************************************************************
 * Macro definitions
@@ -54,103 +54,105 @@
 * Type definitions
 ****************************************************************************************/
 /** \brief Structure type for grouping CAN bus timing related information. */
-typedef struct t_can_bus_timing
-{
-  blt_int8u tseg1;                                    /**< CAN time segment 1          */
-  blt_int8u tseg2;                                    /**< CAN time segment 2          */
-} tCanBusTiming;
+// typedef struct t_can_bus_timing
+// {
+//   blt_int8u tseg1;                                    /**< CAN time segment 1          */
+//   blt_int8u tseg2;                                    /**< CAN time segment 2          */
+// } tCanBusTiming;
 
 
 /****************************************************************************************
 * Local constant declarations
 ****************************************************************************************/
-/** \brief CAN bittiming table for dynamically calculating the bittiming settings.
- *  \details According to the CAN protocol 1 bit-time can be made up of between 8..25
- *           time quanta (TQ). The total TQ in a bit is SYNC + TSEG1 + TSEG2 with SYNC
- *           always being 1. The sample point is (SYNC + TSEG1) / (SYNC + TSEG1 + SEG2) *
- *           100%. This array contains possible and valid time quanta configurations with
- *           a sample point between 68..78%.
- */
-static const tCanBusTiming canTiming[] =
-{
-  /*  TQ | TSEG1 | TSEG2 | SP  */
-  /* ------------------------- */
-  {  5, 2 },          /*   8 |   5   |   2   | 75% */
-  {  6, 2 },          /*   9 |   6   |   2   | 78% */
-  {  6, 3 },          /*  10 |   6   |   3   | 70% */
-  {  7, 3 },          /*  11 |   7   |   3   | 73% */
-  {  8, 3 },          /*  12 |   8   |   3   | 75% */
-  {  9, 3 },          /*  13 |   9   |   3   | 77% */
-  {  9, 4 },          /*  14 |   9   |   4   | 71% */
-  { 10, 4 },          /*  15 |  10   |   4   | 73% */
-  { 11, 4 },          /*  16 |  11   |   4   | 75% */
-  { 12, 4 },          /*  17 |  12   |   4   | 76% */
-  { 12, 5 },          /*  18 |  12   |   5   | 72% */
-  { 13, 5 },          /*  19 |  13   |   5   | 74% */
-  { 14, 5 },          /*  20 |  14   |   5   | 75% */
-  { 15, 5 },          /*  21 |  15   |   5   | 76% */
-  { 15, 6 },          /*  22 |  15   |   6   | 73% */
-  { 16, 6 },          /*  23 |  16   |   6   | 74% */
-  { 16, 7 },          /*  24 |  16   |   7   | 71% */
-  { 16, 8 }           /*  25 |  16   |   8   | 68% */
-};
+// /** \brief CAN bittiming table for dynamically calculating the bittiming settings.
+//  *  \details According to the CAN protocol 1 bit-time can be made up of between 8..25
+//  *           time quanta (TQ). The total TQ in a bit is SYNC + TSEG1 + TSEG2 with SYNC
+//  *           always being 1. The sample point is (SYNC + TSEG1) / (SYNC + TSEG1 + SEG2) *
+//  *           100%. This array contains possible and valid time quanta configurations with
+//  *           a sample point between 68..78%.
+//  */
+// static const tCanBusTiming canTiming[] =
+// {
+//   /*  TQ | TSEG1 | TSEG2 | SP  */
+//   /* ------------------------- */
+//   {  5, 2 },          /*   8 |   5   |   2   | 75% */
+//   {  6, 2 },          /*   9 |   6   |   2   | 78% */
+//   {  6, 3 },          /*  10 |   6   |   3   | 70% */
+//   {  7, 3 },          /*  11 |   7   |   3   | 73% */
+//   {  8, 3 },          /*  12 |   8   |   3   | 75% */
+//   {  9, 3 },          /*  13 |   9   |   3   | 77% */
+//   {  9, 4 },          /*  14 |   9   |   4   | 71% */
+//   { 10, 4 },          /*  15 |  10   |   4   | 73% */
+//   { 11, 4 },          /*  16 |  11   |   4   | 75% */
+//   { 12, 4 },          /*  17 |  12   |   4   | 76% */
+//   { 12, 5 },          /*  18 |  12   |   5   | 72% */
+//   { 13, 5 },          /*  19 |  13   |   5   | 74% */
+//   { 14, 5 },          /*  20 |  14   |   5   | 75% */
+//   { 15, 5 },          /*  21 |  15   |   5   | 76% */
+//   { 15, 6 },          /*  22 |  15   |   6   | 73% */
+//   { 16, 6 },          /*  23 |  16   |   6   | 74% */
+//   { 16, 7 },          /*  24 |  16   |   7   | 71% */
+//   { 16, 8 }           /*  25 |  16   |   8   | 68% */
+// };
 
+can_mb_conf_t tx_mailbox;
+can_mb_conf_t rx_mailbox;
 
-/************************************************************************************//**
-** \brief     Search algorithm to match the desired baudrate to a possible bus
-**            timing configuration.
-** \param     baud The desired baudrate in kbps. Valid values are 10..1000.
-** \param     prescaler Pointer to where the value for the prescaler will be stored.
-** \param     tseg1 Pointer to where the value for TSEG2 will be stored.
-** \param     tseg2 Pointer to where the value for TSEG2 will be stored.
-** \return    BLT_TRUE if the CAN bustiming register values were found, BLT_FALSE
-**            otherwise.
-**
-****************************************************************************************/
-static blt_bool CanGetSpeedConfig(blt_int16u baud, blt_int16u *prescaler,
-                                  blt_int8u *tseg1, blt_int8u *tseg2)
-{
-  blt_int8u  cnt;
-  blt_int32u canClockFreqkHz;
+// /************************************************************************************//**
+// ** \brief     Search algorithm to match the desired baudrate to a possible bus
+// **            timing configuration.
+// ** \param     baud The desired baudrate in kbps. Valid values are 10..1000.
+// ** \param     prescaler Pointer to where the value for the prescaler will be stored.
+// ** \param     tseg1 Pointer to where the value for TSEG2 will be stored.
+// ** \param     tseg2 Pointer to where the value for TSEG2 will be stored.
+// ** \return    BLT_TRUE if the CAN bustiming register values were found, BLT_FALSE
+// **            otherwise.
+// **
+// ****************************************************************************************/
+// static blt_bool CanGetSpeedConfig(blt_int16u baud, blt_int16u *prescaler,
+//                                   blt_int8u *tseg1, blt_int8u *tseg2)
+// {
+//   blt_int8u  cnt;
+//   blt_int32u canClockFreqkHz;
 
-  /* TODO ##Port This helper function assists with getting a compatible bittiming 
-   * configuration, based on the specified 'baud' communication speed on the CAN bus in
-   * kbps. This function needs two microcontroller specific values: (1) the speed of
-   * the clock that sources the CAN peripheral and (2) the supported range of the
-   * prescaler that for scaling down the CAN peripheral clock speed.
-   */
+//   /* TODO ##Port This helper function assists with getting a compatible bittiming 
+//    * configuration, based on the specified 'baud' communication speed on the CAN bus in
+//    * kbps. This function needs two microcontroller specific values: (1) the speed of
+//    * the clock that sources the CAN peripheral and (2) the supported range of the
+//    * prescaler that for scaling down the CAN peripheral clock speed.
+//    */
 
-  /* TODO ##Port Set the clock speed of the CAN peripheral in kHz. You can used the
-   * macros BOOT_CPU_XTAL_SPEED_KHZ and BOOT_CPU_SYSTEM_SPEED_KHZ if applicable. 
-   */
-  canClockFreqkHz = BOOT_CPU_XTAL_SPEED_KHZ;
+//   /* TODO ##Port Set the clock speed of the CAN peripheral in kHz. You can used the
+//    * macros BOOT_CPU_XTAL_SPEED_KHZ and BOOT_CPU_SYSTEM_SPEED_KHZ if applicable. 
+//    */
+//   canClockFreqkHz = BOOT_CPU_XTAL_SPEED_KHZ;
 
-  /* loop through all possible time quanta configurations to find a match */
-  for (cnt=0; cnt < sizeof(canTiming)/sizeof(canTiming[0]); cnt++)
-  {
-    if ((canClockFreqkHz % (baud*(canTiming[cnt].tseg1+canTiming[cnt].tseg2+1))) == 0)
-    {
-      /* compute the prescaler that goes with this TQ configuration */
-      *prescaler = canClockFreqkHz/(baud*(canTiming[cnt].tseg1+canTiming[cnt].tseg2+1));
+//   /* loop through all possible time quanta configurations to find a match */
+//   for (cnt=0; cnt < sizeof(canTiming)/sizeof(canTiming[0]); cnt++)
+//   {
+//     if ((canClockFreqkHz % (baud*(canTiming[cnt].tseg1+canTiming[cnt].tseg2+1))) == 0)
+//     {
+//       /* compute the prescaler that goes with this TQ configuration */
+//       *prescaler = canClockFreqkHz/(baud*(canTiming[cnt].tseg1+canTiming[cnt].tseg2+1));
   
-      /* TODO ##Port Update the prescaler range that is supported by the CAN peripheral
-       * on the microcontroller. The example implementation is for a prescaler that can
-       * be in the 1 - 1024 range.
-       */
-      /* make sure the prescaler is valid */
-      if ((*prescaler > 0) && (*prescaler <= 1024))
-      {
-        /* store the bustiming configuration */
-        *tseg1 = canTiming[cnt].tseg1;
-        *tseg2 = canTiming[cnt].tseg2;
-        /* found a good bus timing configuration */
-        return BLT_TRUE;
-      }
-    }
-  }
-  /* could not find a good bus timing configuration */
-  return BLT_FALSE;
-} /*** end of CanGetSpeedConfig ***/
+//       /* TODO ##Port Update the prescaler range that is supported by the CAN peripheral
+//        * on the microcontroller. The example implementation is for a prescaler that can
+//        * be in the 1 - 1024 range.
+//        */
+//       /* make sure the prescaler is valid */
+//       if ((*prescaler > 0) && (*prescaler <= 1024))
+//       {
+//         /* store the bustiming configuration */
+//         *tseg1 = canTiming[cnt].tseg1;
+//         *tseg2 = canTiming[cnt].tseg2;
+//         /* found a good bus timing configuration */
+//         return BLT_TRUE;
+//       }
+//     }
+//   }
+//   /* could not find a good bus timing configuration */
+//   return BLT_FALSE;
+// } /*** end of CanGetSpeedConfig ***/
 
 
 /************************************************************************************//**
@@ -160,28 +162,33 @@ static blt_bool CanGetSpeedConfig(blt_int16u baud, blt_int16u *prescaler,
 ****************************************************************************************/
 void CanInit(void)
 {
-  blt_int16u prescaler = 0;
-  blt_int8u  tseg1 = 0, tseg2 = 0;
+  //blt_int16u prescaler = 0;
+  //blt_int8u  tseg1 = 0, tseg2 = 0;
 
-  /* TODO ##Port Perform compile time assertion to check that the configured CAN channel
+  /* DONE ##Port Perform compile time assertion to check that the configured CAN channel
    * is actually supported by this driver. The example is for a driver where CAN
    * channels 0 - 1 are supported. 
    */
   ASSERT_CT((BOOT_COM_CAN_CHANNEL_INDEX == 0 || BOOT_COM_CAN_CHANNEL_INDEX == 1));
+  #if (BOOT_COM_CAN_CHANNEL_INDEX == 0)
+  #define CAN_INTERFACE CAN0
+  #else 
+  #define CAN_INTERFACE CAN1
+  #endif
 
-  /* obtain bittiming configuration information. */
-  if (CanGetSpeedConfig(BOOT_COM_CAN_BAUDRATE/1000, &prescaler, &tseg1, &tseg2) == BLT_FALSE)
-  {
-    /* Incorrect configuration. The specified baudrate is not supported for the given
-     * clock configuration. Verify the following settings in blt_conf.h:
-     *   - BOOT_COM_CAN_BAUDRATE
-     *   - BOOT_CPU_XTAL_SPEED_KHZ
-     *   - BOOT_CPU_SYSTEM_SPEED_KHZ
-     */
-    ASSERT_RT(BLT_FALSE);
-  }
+  // /* obtain bittiming configuration information. */
+  // if (CanGetSpeedConfig(BOOT_COM_CAN_BAUDRATE/1000, &prescaler, &tseg1, &tseg2) == BLT_FALSE)
+  // {
+  //   /* Incorrect configuration. The specified baudrate is not supported for the given
+  //    * clock configuration. Verify the following settings in blt_conf.h:
+  //    *   - BOOT_COM_CAN_BAUDRATE
+  //    *   - BOOT_CPU_XTAL_SPEED_KHZ
+  //    *   - BOOT_CPU_SYSTEM_SPEED_KHZ
+  //    */
+  //   ASSERT_RT(BLT_FALSE);
+  // }
 
-  /* TODO ##Port Perform the configuration and initialization of the CAN controller. Note
+  /* DONE ##Port Perform the configuration and initialization of the CAN controller. Note
    * that the bittiming related values are already stored in 'prescaler, 'tseg1', and
    * 'tseg2'. There values are ready to be used. Typically, the following tasks need
    * to be performed:
@@ -198,7 +205,28 @@ void CanInit(void)
    *     received. Note that if the 0x80000000 bit is set in this identifier, it means
    *     that it is a 29-bit CAN identifier instead of an 11-bit.
    * (6) Leave the initialization mode and place the CAN controller in operational mode.
-   */    
+   */ 
+
+  // only support for 11 bit ids
+  ASSERT_RT(BOOT_COM_CAN_RX_MSG_ID < 0x80000000);
+  ASSERT_RT(BOOT_COM_CAN_TX_MSG_ID < 0x80000000);
+
+  can_init(CAN_INTERFACE, SystemCoreClock, BOOT_COM_CAN_BAUDRATE/1000);
+
+  can_reset_all_mailbox(CAN_INTERFACE);
+
+  rx_mailbox.ul_mb_idx = 0;
+  rx_mailbox.uc_obj_type = CAN_MB_RX_MODE;
+  rx_mailbox.ul_id_msk = CAN_MAM_MIDvA_Msk | CAN_MAM_MIDvB_Msk;
+  rx_mailbox.ul_id = CAN_MID_MIDvA(BOOT_COM_CAN_RX_MSG_ID);
+  can_mailbox_init(CAN_INTERFACE, &rx_mailbox);
+
+  tx_mailbox.ul_mb_idx = 1;
+  tx_mailbox.uc_obj_type = CAN_MB_TX_MODE;
+  tx_mailbox.uc_tx_prio = 15;
+  tx_mailbox.uc_id_ver = 0;
+  tx_mailbox.ul_id_msk = 0;
+  can_mailbox_init(CAN0, &tx_mailbox);
 } /*** end of CanInit ***/
 
 
@@ -213,7 +241,7 @@ void CanTransmitPacket(blt_int8u *data, blt_int8u len)
 {
   blt_int32u timeout;
 
-  /* TODO ##Port Configure the transmit message object for transmitting a CAN message
+  /* DONE ##Port Configure the transmit message object for transmitting a CAN message
    * with CAN identifier BOOT_COM_CAN_TX_MSG_ID. Note that if the 0x80000000 bit is set
    * in this identifier, it means that it is a 29-bit CAN identifier instead of an
    * 11-bit. Next, copy the message data to the transmit message object. The number
@@ -221,15 +249,25 @@ void CanTransmitPacket(blt_int8u *data, blt_int8u len)
    * Once done, start the transmission of the message that was just stored in the
    * transmit message object.
    */
+  ASSERT_RT(BOOT_COM_CAN_TX_MSG_ID < 0x80000000);
 
-  /* TODO ##Port Wait for the message transmission to complete, with timeout though to
+  tx_mailbox.ul_id = CAN_MID_MIDvA(BOOT_COM_CAN_TX_MSG_ID);
+  // Buffer overflow, but who cares
+  tx_mailbox.ul_datal = *((blt_int32u*)data);
+  tx_mailbox.ul_datah = *((blt_int32u*)data+4);;
+  tx_mailbox.uc_length = len;
+  can_mailbox_write(CAN_INTERFACE, &tx_mailbox);
+
+  can_global_send_transfer_cmd(CAN_INTERFACE, CAN_TCR_MB1);
+
+  /* DONE ##Port Wait for the message transmission to complete, with timeout though to
    * make sure this function doesn't hang in case of an error. This is typically achieved
    * by evaluating a transmit complete flag in a register of the transmit message object.
    */
   /* determine timeout time for the transmit completion. */
   timeout = TimerGet() + CAN_MSG_TX_TIMEOUT_MS;
   /* poll for completion of the transmit operation. */
-  while (1 == 0)
+  while (!(can_mailbox_get_status(CAN_INTERFACE, 1) & CAN_MSR_MRDY))
   {
     /* service the watchdog. */
     CopService();
@@ -263,6 +301,13 @@ blt_bool CanReceivePacket(blt_int8u *data, blt_int8u *len)
    * to BLT_TRUE to indicate to the caller of this function that a new CAN message was
    * received and stored.
    */
+  if (can_mailbox_get_status(CAN_INTERFACE, 0) & CAN_MSR_MRDY) {
+    can_mailbox_read(CAN_INTERFACE, &rx_mailbox);
+    *len = rx_mailbox.uc_length;
+    *((blt_int32u*)data) = rx_mailbox.ul_datal;
+    *((blt_int32u*)data+4) = rx_mailbox.ul_datal;
+    result = BLT_TRUE;
+  } 
 
   /* give the result back to the caller */
   return result;
