@@ -184,27 +184,27 @@ static const tFlashSector flashLayout[] =
    * in chunks of 16 KB and the first 32 KB are reserved for the bootloader. Its flash
    * memory starts at 0x08000000 in the memory map.
    */
-/*{ 0x08000000, 0x08000, 0 },         flash sector 0 - reserved for bootloader      */
-  { 0x08008000, 0x08000, 1},            /* flash sector  1 - 32kb                      */
+/*{ 0x00080000, 0x08000, 0 },         flash sector 0 - reserved for bootloader      */
+  { 0x00088000, 0x08000, 1},            /* flash sector  1 - 32kb                      */
 #if (BOOT_NVM_SIZE_KB > 64)
-  { 0x08010000, 0x08000, 2},            /* flash sector  2 - 32kb                      */
-  { 0x08018000, 0x08000, 3},            /* flash sector  3 - 32kb                      */
+  { 0x08090000, 0x08000, 2},            /* flash sector  2 - 32kb                      */
+  { 0x08098000, 0x08000, 3},            /* flash sector  3 - 32kb                      */
 #endif
 #if (BOOT_NVM_SIZE_KB > 128)
-  { 0x08020000, 0x08000, 4},            /* flash sector  4 - 32kb                      */
-  { 0x08028000, 0x08000, 5},            /* flash sector  5 - 32kb                      */
-  { 0x08030000, 0x08000, 6},            /* flash sector  6 - 32kb                      */
-  { 0x08038000, 0x08000, 7},            /* flash sector  7 - 32kb                      */
+  { 0x080A0000, 0x08000, 4},            /* flash sector  4 - 32kb                      */
+  { 0x080A8000, 0x08000, 5},            /* flash sector  5 - 32kb                      */
+  { 0x080B0000, 0x08000, 6},            /* flash sector  6 - 32kb                      */
+  { 0x080B8000, 0x08000, 7},            /* flash sector  7 - 32kb                      */
 #endif
 #if (BOOT_NVM_SIZE_KB > 256)
-  { 0x08040000, 0x08000, 8},            /* flash sector  8 - 32kb                      */
-  { 0x08048000, 0x08000, 9},            /* flash sector  9 - 32kb                      */
-  { 0x08050000, 0x08000, 10},            /* flash sector  10 - 32kb                      */
-  { 0x08058000, 0x08000, 11},            /* flash sector  11 - 32kb                      */
-  { 0x08060000, 0x08000, 12},            /* flash sector  12 - 32kb                      */
-  { 0x08068000, 0x08000, 13},            /* flash sector  13 - 32kb                      */
-  { 0x08070000, 0x08000, 14},            /* flash sector  14 - 32kb                      */
-  { 0x08078000, 0x08000, 15},            /* flash sector  15 - 32kb                      */
+  { 0x080C0000, 0x08000, 8},            /* flash sector  8 - 32kb                      */
+  { 0x080C8000, 0x08000, 9},            /* flash sector  9 - 32kb                      */
+  { 0x080D0000, 0x08000, 10},            /* flash sector  10 - 32kb                      */
+  { 0x080D8000, 0x08000, 11},            /* flash sector  11 - 32kb                      */
+  { 0x080E0000, 0x08000, 12},            /* flash sector  12 - 32kb                      */
+  { 0x080E8000, 0x08000, 13},            /* flash sector  13 - 32kb                      */
+  { 0x080F0000, 0x08000, 14},            /* flash sector  14 - 32kb                      */
+  { 0x080F8000, 0x08000, 15},            /* flash sector  15 - 32kb                      */
 #endif
 #if (BOOT_NVM_SIZE_KB > 512)
 #error "BOOT_NVM_SIZE_KB > 512 is currently not supported."
