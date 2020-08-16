@@ -237,7 +237,8 @@ const DeviceVectors exception_table = {
 	(void*) (0UL),           /* 42 Reserved */
 #endif /* _SAM3XA_EMAC_INSTANCE_ */
 	(void*) CAN0_Handler,    /* 43 CAN Controller 0 */
-	(void*) CAN1_Handler     /* 44 CAN Controller 1 */
+	(void*) CAN1_Handler,     /* 44 CAN Controller 1 */
+	(void*) 0x55AA11EE       /* Reserved for OpenBLT checksum*/
 };
 
 /**
@@ -247,6 +248,10 @@ const DeviceVectors exception_table = {
 void Reset_Handler(void)
 {
 	uint32_t *pSrc, *pDest;
+
+	__asm("	ldr r1, = _estack\n"
+		  "	mov sp, r1");
+
 
 	/* Initialize the relocate segment */
 	pSrc = &_etext;

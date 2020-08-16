@@ -48,10 +48,16 @@ static unsigned long millisecond_counter;
 ****************************************************************************************/
 void TimerInit(void)
 {
-  /* TODO ##Prog Configure a timer peripheral such that an interrupt is generated every
+  /* DONE ##Prog Configure a timer peripheral such that an interrupt is generated every
    * 1 millisecond. 
    */
 
+  // Set Systick to 1ms interval, common to all SAM3 variants
+  if (SysTick_Config(CHIP_FREQ_CPU_MAX / 1000))
+  {
+  // Capture error
+    while (1);
+  }
   /* Reset the millisecond counter value. */
   millisecond_counter = 0;
 } /*** end of TimerInit ***/
@@ -79,10 +85,11 @@ void TimerInterrupt(void)
   /* Increment the millisecond counter. */
   millisecond_counter++;
 
-  /* TODO ##Prog Clear the timer peripheral's interrupt flag and, if necessary,
+  /* DONE ##Prog Clear the timer peripheral's interrupt flag and, if necessary,
    * reconfigure the timer peripheral such that another timer interrupt is generated
    * in a millisecond after the last timer interrupt event. 
    */
+    SCB->ICSR |= 1u << 25;
 } /*** end of TimerInterrupt ***/
 
 

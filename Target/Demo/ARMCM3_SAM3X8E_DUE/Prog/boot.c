@@ -75,12 +75,14 @@ void BootComCheckActivationRequest(void)
 ****************************************************************************************/
 void BootActivate(void)
 {
-  /* TODO ##Prog The bootloader is typically executed by performing a software reset. 
+  /* DONE ##Prog The bootloader is typically executed by performing a software reset. 
    * Performing a software reset it typically supported by a microcontroller target. If
    * not, then an alternative is to enable the watchdog here and then enter an infinite
    * loop, which will trigger a watchdog reset. After a reset event the bootloader always
    * runs first, so this is a valid method for activating the bootloader. 
    */
+    NVIC_SystemReset();
+
 } /*** end of BootActivate ***/
 
 

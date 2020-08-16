@@ -55,12 +55,12 @@ PROJ_FILES = $(call rwildcard, , *.c *.h *.s)
 #| Toolchain binaries                                                                   |
 #|--------------------------------------------------------------------------------------|
 RM = rm
-CC = $(TOOL_PATH)gcc
-LN = $(TOOL_PATH)gcc
-OC = $(TOOL_PATH)objcopy
-OD = $(TOOL_PATH)objdump
-AS = $(TOOL_PATH)gcc
-SZ = $(TOOL_PATH)size
+CC = $(TOOL_PATH)arm-none-eabi-gcc
+LN = $(TOOL_PATH)arm-none-eabi-gcc
+OC = $(TOOL_PATH)arm-none-eabi-objcopy
+OD = $(TOOL_PATH)arm-none-eabi-objdump
+AS = $(TOOL_PATH)arm-none-eabi-gcc
+SZ = $(TOOL_PATH)arm-none-eabi-size
 
 
 #|--------------------------------------------------------------------------------------|
@@ -84,14 +84,16 @@ LIB_PATH  =
 #|--------------------------------------------------------------------------------------|
 #| Options for toolchain binaries                                                       |
 #|--------------------------------------------------------------------------------------|
-STDFLAGS    = -fdata-sections -ffunction-sections -Wall -g -Wno-strict-aliasing
+STDFLAGS    = -mcpu=cortex-m3 -mthumb -fno-strict-aliasing
+STDFLAGS   += -fdata-sections -ffunction-sections -Wall -g -Wno-pointer-to-int-cast
 OPTFLAGS    = -Og
 CFLAGS      = $(STDFLAGS) $(OPTFLAGS)
+CFLAGS      += -D ARM_MATH_CM3=true -D__SAM3X8E__
 CFLAGS     += $(INC_PATH)
 AFLAGS      = $(CFLAGS)
 LFLAGS      = $(STDFLAGS) $(OPTFLAGS)
-LFLAGS     += -Wl,-Map=$(BIN_PATH)/$(PROJ_NAME).map
-LFLAGS     += -Wl,--gc-sections $(LIB_PATH)
+LFLAGS     += -Wl,-script="sam3x8e_flash.ld" -Wl,-Map=$(BIN_PATH)/$(PROJ_NAME).map,--cref -Wl,--entry=Reset_Handler -Wl,--cref
+LFLAGS     +=  -specs=nano.specs -specs=nosys.specs -Wl,--gc-sections $(LIB_PATH)
 OFLAGS      = -O srec
 ODFLAGS     = -x
 SZFLAGS     = -B -d

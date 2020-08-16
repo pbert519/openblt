@@ -35,7 +35,7 @@
 #include "boot.h"                                      /* bootloader interface driver  */
 #include "led.h"                                       /* LED driver                   */
 #include "timer.h"                                     /* Timer driver                 */
-
+#include "chip.h"
 
 #endif /* HEADER_H */
 /*********************************** end of header.h ***********************************/

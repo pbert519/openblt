@@ -187,6 +187,7 @@ typedef struct _DeviceVectors
   void* pfnEMAC_Handler;   /* 42 Ethernet MAC */
   void* pfnCAN0_Handler;   /* 43 CAN Controller 0 */
   void* pfnCAN1_Handler;   /* 44 CAN Controller 1 */
+  void* pfnBLT_Handler;   /* Reserved for OpenBLT checksum*/
 } DeviceVectors;
 
 /* Cortex-M3 core handlers */

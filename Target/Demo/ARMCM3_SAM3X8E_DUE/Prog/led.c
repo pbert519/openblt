@@ -46,9 +46,13 @@
 ****************************************************************************************/
 void LedInit(void)
 {
-  /* TODO ##Prog Configure the GPIO pin that the LED is connected to, as a digital output
+  /* DONE ##Prog Configure the GPIO pin that the LED is connected to, as a digital output
    * and make sure the LED is turned off after this configuration.
    */
+  // LED
+  PIO_Configure(PIOC, PIO_OUTPUT_0, PIO_PC3, PIO_DEFAULT);
+  PIO_Configure(PIOC, PIO_OUTPUT_0, PIO_PC2, PIO_DEFAULT);
+  pmc_enable_periph_clk(ID_PIOC);
 } /*** end of LedInit ***/
 
 
@@ -75,12 +79,16 @@ void LedToggle(void)
   if (led_toggle_state == 0)
   {
     led_toggle_state = 1;
-    /* TODO ##Prog Turn the LED on. */
+    /* DONE ##Prog Turn the LED on. */
+    PIO_Set(PIOC, PIO_PC2);
+
   }
   else
   {
     led_toggle_state = 0;
-    /* TODO ##Prog Turn the LED off. */
+    /* DONE ##Prog Turn the LED off. */
+    PIO_Clear(PIOC, PIO_PC2);
+
   }
 
   /* store toggle time to determine next toggle interval */

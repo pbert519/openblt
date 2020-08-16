@@ -31,7 +31,7 @@
 ****************************************************************************************/
 #include "header.h"                                    /* generic header               */
 
-/* TODO ##Prog The PC host tools that ship with the OpenBLT bootloader (MicroBoot and
+/* DONE ##Prog The PC host tools that ship with the OpenBLT bootloader (MicroBoot and
  * BootCommander) expect the firmware binary to be in the S-Record format. Make sure to
  * configure the project in your IDE or Makefile to generate an S-Record. This is
  * typically done in a post-build step. More information about the S-Record format can
@@ -46,7 +46,7 @@
  * reserved for the bootloader.
  */
  
-/* TODO ##Prog The bootloader should handle the remapping of the interrupt vector table
+/* DONE ##Prog The bootloader should handle the remapping of the interrupt vector table
  * base address such that this user program's vector table is used. This functionality
  * is implemented in the bootloader's function CpuStartUserProgram() in file cpu.c.
  * Some microcontroller manufacturer provided peripheral driver libraries, which might
@@ -57,7 +57,7 @@
  * interrupts are enabled.
  */
  
-/* TODO ##Prog Some microcontrollers store the initial value for the stackpointer
+/* DONE ##Prog Some microcontrollers store the initial value for the stackpointer
  * CPU register in the interrupt vector table and the microcontroller automatically loads
  * this value into the stackpointer CPU register upon reset. Since this user program is
  * not directly started by a microcontroller reset, but by the bootloader, the CPU
@@ -108,12 +108,13 @@ int main(void)
 ****************************************************************************************/
 static void Init(void)
 {
-  /* TODO ##Prog Initialize the microcontroller. This typically consists of configuring
+  /* DONE ##Prog Initialize the microcontroller. This typically consists of configuring
    * the microcontroller's system clock and configuring the GPIO for the communication
    * peripheral(s) supported in this user program's boot.c. If the microcontroller does
    * not enable interrupts automatically after a reset, the interrupts should be enabled
    * here as well.
    */
+  SystemInit();
   /* initialize the timer driver */
   TimerInit();
   /* initialize the led driver */
